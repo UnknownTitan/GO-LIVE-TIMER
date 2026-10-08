@@ -7,8 +7,6 @@ import {
   countStatuses,
   ProgressBar,
   readyPercent,
-  StatusBar,
-  StatusDonut,
   StatusPill,
   STATUS_ORDER,
   type StatusCounts,
@@ -115,7 +113,6 @@ const pctOf = (n: number, total: number) => (total === 0 ? 0 : Math.round((n / t
 
 const SECTIONS: { id: string; label: string; icon: ViewerIcon }[] = [
   { id: 'overview', label: 'Overview', icon: 'home' },
-  { id: 'charts', label: 'Charts', icon: 'chart' },
   { id: 'clusters', label: 'Clusters', icon: 'table' },
 ];
 
@@ -234,19 +231,6 @@ export function Dashboard({ data, c }: { data: CountdownData; c: Countdown | nul
     [data.clusterNames, scope],
   );
 
-  const phaseRows = useMemo(() => {
-    const groups = new Map<string, PublicSystem[]>();
-    for (const s of data.systems) {
-      if (s.goLive === 'no') continue;
-      const key = `Phase ${s.phase[0]}`;
-      groups.set(key, [...(groups.get(key) ?? []), s]);
-    }
-    return [...groups]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([name, systems]) => ({ name, systems, counts: countStatuses(systems) }));
-  }, [data.systems]);
-
-
   const tiles: { key: string; value: number; label: string; sub: string; status?: SystemStatus; bar?: number }[] = [
     { key: 'all', value: data.systems.length, label: 'Total systems', sub: `All phases · ${data.clusterNames.length} clusters` },
     {
@@ -331,62 +315,6 @@ export function Dashboard({ data, c }: { data: CountdownData; c: Countdown | nul
           onClose={() => setOpenTile(null)}
         />
       )}
-
-      <div className="v-grid three" id="charts">
-        <section className="card-v" aria-labelledby="phase-h">
-          <h2 id="phase-h">
-            <span className="h-icon" aria-hidden="true">
-              <VIcon name="chart" size={18} />
-            </span>
-            Readiness by phase
-          </h2>
-          <p className="card-sub">Ready or live, out of the systems planned for each phase.</p>
-          <ul className="phase-list">
-            {phaseRows.map((p) => (
-              <li key={p.name}>
-                <span className="phase-name">{p.name}</span>
-                <StatusBar counts={p.counts} label={p.name} />
-                <span className="phase-pct">{readyPercent(p.counts)}%</span>
-                <span className="phase-count">{p.systems.length} systems</span>
-              </li>
-            ))}
-          </ul>
-          <Legend />
-        </section>
-
-        <section className="card-v" aria-labelledby="status-h">
-          <h2 id="status-h">
-            <span className="h-icon" aria-hidden="true">
-              <VIcon name="donut" size={18} />
-            </span>
-            Systems by status
-          </h2>
-          <p className="card-sub">This go-live{phasesLabel && ` (phases ${phasesLabel})`}.</p>
-          <StatusDonut counts={counts} />
-        </section>
-
-        <section className="card-v" aria-labelledby="cluster-chart-h">
-          <h2 id="cluster-chart-h">
-            <span className="h-icon" aria-hidden="true">
-              <VIcon name="grid" size={18} />
-            </span>
-            Readiness by cluster
-          </h2>
-          <p className="card-sub">This go-live. Percentage is ready or live.</p>
-          <ul className="cluster-bars">
-            {clusterRows.map((r) => (
-              <li key={r.code}>
-                <span className="cb-name" title={r.name}>
-                  <span className="cb-code">{r.code}</span> {r.name}
-                </span>
-                <StatusBar counts={r.counts} label={`${r.code} ${r.name}`} />
-                <span className="cb-pct">{readyPercent(r.counts)}%</span>
-              </li>
-            ))}
-          </ul>
-          <Legend />
-        </section>
-      </div>
 
       <div className="v-grid">
         <ClusterTable rows={clusterRows} total={total} />
@@ -545,19 +473,6 @@ function CountdownHero({ c }: { c: Countdown | null }) {
         </p>
       )}
     </section>
-  );
-}
-
-function Legend() {
-  return (
-    <ul className="legend inline" aria-label="Legend">
-      {STATUS_ORDER.map((s) => (
-        <li key={s}>
-          <span className={`swatch ${s}`} aria-hidden="true" />
-          {STATUS_LABELS[s]}
-        </li>
-      ))}
-    </ul>
   );
 }
 

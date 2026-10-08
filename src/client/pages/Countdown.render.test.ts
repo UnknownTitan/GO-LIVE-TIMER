@@ -40,15 +40,14 @@ describe('viewer dashboard', () => {
     const html = render('2026-10-08T20:00:00Z');
     expect(html).toContain('Go-live countdown');
     expect(html).toContain('This go-live');
-    expect(html).toContain('Readiness by phase');
-    expect(html).toContain('Systems by status');
+    expect(html).not.toContain('Readiness by phase');
+    expect(html).not.toContain('Systems by status');
     expect(html).toContain('This go-live by cluster');
     expect(html).not.toContain('Already live');
     expect(html).not.toContain('Going live this release');
     expect(html).not.toContain('Needs attention');
-    // Phase 2 systems are counted under "Phase 2" but not in this go-live's donut total (4).
-    expect(html).toMatch(/class="donut-total"[^>]*>4</);
-    expect(html).toContain('Phase 2');
+    // Four systems are in this go-live; the phase 2A system is not.
+    expect(html).toMatch(/class="tile-value">4</);
   });
 
   it('switches to "Live for" after go-live', () => {
