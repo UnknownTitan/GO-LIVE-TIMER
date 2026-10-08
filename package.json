@@ -1,0 +1,53 @@
+{
+  "name": "clet-go-live-countdown",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "CLET Phase 1 go-live countdown with readiness tracking and daily reminder",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,yellow \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:api": "tsx watch --env-file=.env src/server/index.ts",
+    "dev:web": "vite",
+    "build": "vite build && esbuild src/server/index.ts src/server/migrate.ts src/server/create-admin.ts --bundle --platform=node --format=esm --packages=external --outdir=dist/server",
+    "start": "node dist/server/index.js",
+    "migrate": "tsx --env-file=.env src/server/migrate.ts",
+    "admin:create": "tsx --env-file=.env src/server/create-admin.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.3.0",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.1",
+    "node-cron": "^4.6.0",
+    "nodemailer": "^10.0.16",
+    "pg": "^8.23.1",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router-dom": "^7.18.4",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.4",
+    "@types/nodemailer": "^8.0.2",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/supertest": "^7.2.1",
+    "@vitejs/plugin-react": "^6.1.2",
+    "concurrently": "^9.2.5",
+    "esbuild": "^0.28.2",
+    "supertest": "^7.3.1",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^4.1.11"
+  }
+}

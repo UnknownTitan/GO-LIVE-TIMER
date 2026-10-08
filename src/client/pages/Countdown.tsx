@@ -1,0 +1,626 @@
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { computeCountdown, formatGoLive, formatShortDate, plural, type Countdown } from '../../shared/calc';
+import { STATUS_LABELS, type SystemStatus } from '../../shared/status';
+import type { CountdownData, PublicSystem } from '../../shared/validation';
+import { api } from '../api';
+import {
+  countStatuses,
+  ProgressBar,
+  readyPercent,
+  StatusBar,
+  StatusDonut,
+  StatusPill,
+  STATUS_ORDER,
+  type StatusCounts,
+} from './dashboard/charts';
+import { VIcon, type ViewerIcon } from './dashboard/icons';
+import './viewer.css';
+
+const REFRESH_MS = 60_000;
+const CACHE_KEY = 'golive:countdown';
+
+/**
+ * Fills in anything missing, so data saved by an older version of the page (or a
+ * partial response) can't break rendering.
+ */
+export function normalise(raw: unknown): CountdownData | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const d = raw as Partial<CountdownData>;
+  return {
+    goLiveAt: typeof d.goLiveAt === 'string' ? d.goLiveAt : null,
+    headline: d.headline ?? 'Countdown to Phase 1 Go-Live',
+    programmeLine: d.programmeLine ?? '',
+    holidays: Array.isArray(d.holidays) ? d.holidays : [],
+    readinessUpdatedAt: d.readinessUpdatedAt ?? null,
+    clusters: (Array.isArray(d.clusters) ? d.clusters : []).map((c) => ({
+      ...c,
+      readySystems: Array.isArray(c.readySystems) ? c.readySystems : [],
+      liveSystems: Array.isArray(c.liveSystems) ? c.liveSystems : [],
+    })),
+    countdownPhases: Array.isArray(d.countdownPhases) ? d.countdownPhases : [],
+    clusterNames: Array.isArray(d.clusterNames) ? d.clusterNames : [],
+    systems: Array.isArray(d.systems) ? d.systems : [],
+  };
+}
+
+function readCache(): CountdownData | null {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    return raw ? normalise(JSON.parse(raw)) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(data: CountdownData) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+  } catch {
+    // Storage unavailable (private mode); the page still works from memory.
+  }
+}
+
+/** Loads countdown data now and every 60 seconds; keeps the last good copy if the API is down. */
+function useCountdownData() {
+  const [data, setData] = useState<CountdownData | null>(readCache);
+  const [stale, setStale] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const fresh = normalise(await api<unknown>('/api/countdown'));
+      if (!fresh) throw new Error('Unexpected response');
+      setData(fresh);
+      writeCache(fresh);
+      setStale(false);
+    } catch {
+      setStale(true);
+    } finally {
+      setLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+    const id = setInterval(load, REFRESH_MS);
+    // Refresh straight away when a sleeping device or background tab comes back.
+    const onVisible = () => document.visibilityState === 'visible' && load();
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
+  }, [load]);
+
+  return { data, stale, loaded };
+}
+
+/** Current time, updated each second on the second boundary. */
+function useNow() {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      setNow(Date.now());
+      timer = setTimeout(tick, 1000 - (Date.now() % 1000) + 5);
+    };
+    tick();
+    return () => clearTimeout(timer);
+  }, []);
+  return now;
+}
+
+const pad = (n: number) => String(n).padStart(2, '0');
+const pctOf = (n: number, total: number) => (total === 0 ? 0 : Math.round((n / total) * 100));
+
+const SECTIONS: { id: string; label: string; icon: ViewerIcon }[] = [
+  { id: 'overview', label: 'Overview', icon: 'home' },
+  { id: 'charts', label: 'Charts', icon: 'chart' },
+  { id: 'clusters', label: 'Clusters', icon: 'table' },
+  { id: 'going-live', label: 'Going live', icon: 'rocket' },
+  { id: 'live', label: 'Already live', icon: 'live' },
+  { id: 'attention', label: 'Needs attention', icon: 'not_ready' },
+];
+
+export function CountdownPage() {
+  const { data, stale, loaded } = useCountdownData();
+  const now = useNow();
+
+  const goLiveMs = data?.goLiveAt ? Date.parse(data.goLiveAt) : null;
+  const c = data && goLiveMs !== null ? computeCountdown(now, goLiveMs, data.holidays) : null;
+
+  useEffect(() => {
+    if (!c) document.title = 'CLET Go-Live Countdown';
+    else if (c.isLive) document.title = `Live ${c.days} ${plural(c.days, 'day')} · CLET Go-Live`;
+    else document.title = `${c.days} ${plural(c.days, 'day')} to go-live · CLET`;
+  }, [c?.days, c?.isLive]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!data) {
+    return (
+      <main className="page">
+        <p className="notice" role="status">
+          {loaded ? 'The countdown could not be loaded. Check your connection; it will retry automatically.' : 'Loading…'}
+        </p>
+      </main>
+    );
+  }
+
+  return (
+    <div className="viewer">
+      <aside className="v-side" aria-label="Sections">
+        <div className="v-brand">
+          <svg viewBox="0 0 32 32" width="36" height="36" aria-hidden="true">
+            <circle cx="16" cy="16" r="15" fill="#BF9000" />
+            <circle cx="16" cy="16" r="11" fill="none" stroke="#1F3864" strokeWidth="2.5" />
+            <path d="M16 9v7l5 3" fill="none" stroke="#1F3864" strokeWidth="2.5" strokeLinecap="round" />
+          </svg>
+          <div>
+            <strong>CLET DTI</strong>
+            <span>Go-live programme</span>
+          </div>
+        </div>
+        <nav className="v-nav">
+          {SECTIONS.map((s) => (
+            <a key={s.id} href={`#${s.id}`}>
+              <VIcon name={s.icon} />
+              <span>{s.label}</span>
+            </a>
+          ))}
+        </nav>
+        <div className="v-mode">
+          <span className="v-eye" aria-hidden="true">
+            <VIcon name="eye" />
+          </span>
+          <div>
+            <strong>Viewer</strong>
+            <span>Read-only access</span>
+          </div>
+        </div>
+      </aside>
+
+      <main className="v-main">
+        <div className="v-topbar">
+          <span className={`live-pill${stale ? ' offline' : ''}`} role="status">
+            <span className="pulse" aria-hidden="true" />
+            {stale ? 'Offline · showing last loaded data' : 'Live · refreshes every minute'}
+          </span>
+          {data.readinessUpdatedAt && (
+            <span className="v-updated">Readiness updated {formatShortDate(data.readinessUpdatedAt)}</span>
+          )}
+          <FullscreenButton />
+        </div>
+        {stale && (
+          <p className="notice" role="status">
+            Can’t reach the server. Still counting from the last loaded data; figures may be out of date.
+          </p>
+        )}
+        <Dashboard data={data} c={c} />
+        <footer className="v-foot">
+          <span>
+            All times GMT (Accra). Working days exclude weekends{data.holidays.length > 0 && ' and public holidays'}.
+          </span>
+          <span>CLET Digital Transformation Programme</span>
+        </footer>
+      </main>
+    </div>
+  );
+}
+
+interface ClusterRow {
+  code: string;
+  name: string;
+  systems: PublicSystem[];
+  counts: StatusCounts;
+  goingLive: number;
+}
+
+export function Dashboard({ data, c }: { data: CountdownData; c: Countdown | null }) {
+  const scope = useMemo(() => data.systems.filter((s) => s.inCountdown), [data.systems]);
+  const counts = useMemo(() => countStatuses(scope), [scope]);
+  const total = scope.length;
+  const phasesLabel = data.countdownPhases.join(', ');
+
+  const clusterRows: ClusterRow[] = useMemo(
+    () =>
+      data.clusterNames
+        .map((cl) => {
+          const systems = scope.filter((s) => s.clusterCode === cl.code);
+          return {
+            ...cl,
+            systems,
+            counts: countStatuses(systems),
+            goingLive: systems.filter((s) => s.goLive === 'yes').length,
+          };
+        })
+        .filter((r) => r.systems.length > 0),
+    [data.clusterNames, scope],
+  );
+
+  const phaseRows = useMemo(() => {
+    const groups = new Map<string, PublicSystem[]>();
+    for (const s of data.systems) {
+      if (s.goLive === 'no') continue;
+      const key = `Phase ${s.phase[0]}`;
+      groups.set(key, [...(groups.get(key) ?? []), s]);
+    }
+    return [...groups]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([name, systems]) => ({ name, systems, counts: countStatuses(systems) }));
+  }, [data.systems]);
+
+  const goingLive = scope.filter((s) => s.goLive === 'yes');
+  const live = data.systems.filter((s) => s.status === 'live');
+  const attention = scope.filter((s) => s.status === 'not_ready');
+  const clusterName = (code: string) => data.clusterNames.find((cl) => cl.code === code)?.name ?? code;
+
+  const tiles: { key: string; value: number; label: string; sub: string; status?: SystemStatus; bar?: number }[] = [
+    { key: 'all', value: data.systems.length, label: 'Total systems', sub: `All phases · ${data.clusterNames.length} clusters` },
+    {
+      key: 'scope',
+      value: total,
+      label: 'This go-live',
+      sub: phasesLabel ? `Phases ${phasesLabel}` : 'No phases chosen',
+      bar: pctOf(total, data.systems.length),
+    },
+    ...STATUS_ORDER.map((s) => ({
+      key: s,
+      value: counts[s],
+      label: STATUS_LABELS[s],
+      sub: `${pctOf(counts[s], total)}% of this go-live`,
+      status: s,
+      bar: pctOf(counts[s], total),
+    })),
+  ];
+
+  return (
+    <>
+      <header className="v-head" id="overview">
+        <div className="v-title">
+          {data.programmeLine && <p className="programme">{data.programmeLine}</p>}
+          <h1>{data.headline}</h1>
+          <p className="lede">Readiness of every system in this go-live, by status, phase and cluster.</p>
+          {data.goLiveAt && (
+            <p className="v-date">
+              <span className="v-date-icon" aria-hidden="true">
+                <VIcon name="calendar" />
+              </span>
+              <span>
+                <span className="label">{c?.isLive ? 'Went live' : 'Go-live date'}</span>
+                <strong>{formatGoLive(data.goLiveAt)}</strong>
+              </span>
+            </p>
+          )}
+        </div>
+        <CountdownHero c={c} />
+      </header>
+
+      <ul className="tiles" aria-label="Summary">
+        {tiles.map((t) => (
+          <li key={t.key} className="tile">
+            <span className={`tile-icon ${t.status ?? t.key}`} aria-hidden="true">
+              <VIcon name={t.status ?? (t.key === 'all' ? 'layers' : 'rocket')} size={22} />
+            </span>
+            <span className="tile-text">
+              <span className="tile-value">{t.value}</span>
+              <span className="tile-label">{t.label}</span>
+              <span className="tile-sub">{t.sub}</span>
+            </span>
+            {t.bar !== undefined && (
+              <ProgressBar value={t.bar} label={`${t.label}: ${t.bar}%`} tone={t.status ?? 'scope'} />
+            )}
+          </li>
+        ))}
+      </ul>
+
+      <div className="v-grid three" id="charts">
+        <section className="card-v" aria-labelledby="phase-h">
+          <h2 id="phase-h">
+            <span className="h-icon" aria-hidden="true">
+              <VIcon name="chart" size={18} />
+            </span>
+            Readiness by phase
+          </h2>
+          <p className="card-sub">Ready or live, out of the systems planned for each phase.</p>
+          <ul className="phase-list">
+            {phaseRows.map((p) => (
+              <li key={p.name}>
+                <span className="phase-name">{p.name}</span>
+                <StatusBar counts={p.counts} label={p.name} />
+                <span className="phase-pct">{readyPercent(p.counts)}%</span>
+                <span className="phase-count">{p.systems.length} systems</span>
+              </li>
+            ))}
+          </ul>
+          <Legend />
+        </section>
+
+        <section className="card-v" aria-labelledby="status-h">
+          <h2 id="status-h">
+            <span className="h-icon" aria-hidden="true">
+              <VIcon name="donut" size={18} />
+            </span>
+            Systems by status
+          </h2>
+          <p className="card-sub">This go-live{phasesLabel && ` (phases ${phasesLabel})`}.</p>
+          <StatusDonut counts={counts} />
+        </section>
+
+        <section className="card-v" aria-labelledby="cluster-chart-h">
+          <h2 id="cluster-chart-h">
+            <span className="h-icon" aria-hidden="true">
+              <VIcon name="grid" size={18} />
+            </span>
+            Readiness by cluster
+          </h2>
+          <p className="card-sub">This go-live. Percentage is ready or live.</p>
+          <ul className="cluster-bars">
+            {clusterRows.map((r) => (
+              <li key={r.code}>
+                <span className="cb-name" title={r.name}>
+                  <span className="cb-code">{r.code}</span> {r.name}
+                </span>
+                <StatusBar counts={r.counts} label={`${r.code} ${r.name}`} />
+                <span className="cb-pct">{readyPercent(r.counts)}%</span>
+              </li>
+            ))}
+          </ul>
+          <Legend />
+        </section>
+      </div>
+
+      <div className="v-grid two">
+        <ClusterTable rows={clusterRows} total={total} />
+
+        <div className="v-lists">
+          <SystemList
+            id="going-live"
+            title="Going live this release"
+            tone="going"
+            systems={goingLive}
+            empty="No systems confirmed for go-live yet."
+            clusterName={clusterName}
+          />
+          <SystemList
+            id="live"
+            title="Already live"
+            tone="live"
+            systems={live}
+            empty="No systems are live yet."
+            clusterName={clusterName}
+          />
+          <SystemList
+            id="attention"
+            title="Needs attention"
+            tone="attention"
+            systems={attention}
+            empty="Nothing in this go-live is marked not ready."
+            clusterName={clusterName}
+          />
+        </div>
+      </div>
+    </>
+  );
+}
+
+function CountdownHero({ c }: { c: Countdown | null }) {
+  if (!c) {
+    return (
+      <section className="hero" aria-label="Countdown">
+        <p className="hero-title">Go-live countdown</p>
+        <p className="hero-empty">The go-live date has not been set yet.</p>
+      </section>
+    );
+  }
+  const units = [
+    { n: String(c.days), label: plural(c.days, 'day') },
+    { n: pad(c.hours), label: plural(c.hours, 'hour') },
+    { n: pad(c.minutes), label: plural(c.minutes, 'minute') },
+    { n: pad(c.seconds), label: plural(c.seconds, 'second') },
+  ];
+  return (
+    <section className="hero" aria-label={c.isLive ? 'Time since go-live' : 'Time to go-live'}>
+      <p className="hero-title">
+        <VIcon name="rocket" size={18} />
+        {c.isLive ? 'Live for' : 'Go-live countdown'}
+      </p>
+      <div className="hero-units" aria-live="off">
+        {units.map((u, i) => (
+          <span key={i} className="hero-unit">
+            <span className="hero-num">{u.n}</span>
+            <span className="hero-label">{u.label}</span>
+          </span>
+        ))}
+      </div>
+      {!c.isLive && (
+        <p className="hero-foot">
+          {c.weeksLeft.toFixed(1)} weeks · {c.workingDaysLeft} working {plural(c.workingDaysLeft, 'day')} left
+        </p>
+      )}
+    </section>
+  );
+}
+
+function Legend() {
+  return (
+    <ul className="legend inline" aria-label="Legend">
+      {STATUS_ORDER.map((s) => (
+        <li key={s}>
+          <span className={`swatch ${s}`} aria-hidden="true" />
+          {STATUS_LABELS[s]}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ClusterTable({ rows, total }: { rows: ClusterRow[]; total: number }) {
+  const [open, setOpen] = useState<Set<string>>(new Set());
+  const toggle = (code: string) =>
+    setOpen((o) => {
+      const next = new Set(o);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
+      return next;
+    });
+
+  return (
+    <section className="card-v" id="clusters" aria-labelledby="table-h">
+      <div className="card-head">
+        <h2 id="table-h">
+          <span className="h-icon" aria-hidden="true">
+            <VIcon name="table" size={18} />
+          </span>
+          This go-live by cluster
+        </h2>
+        <span className="count-pill">{total} systems</span>
+      </div>
+      <p className="card-sub">Select a cluster to see its systems.</p>
+      {rows.length === 0 ? (
+        <p className="muted">No systems are in this go-live yet.</p>
+      ) : (
+        <div className="v-table-wrap">
+          <table className="v-table">
+            <thead>
+              <tr>
+                <th>Cluster</th>
+                <th className="num">Total</th>
+                <th className="num">Going live</th>
+                <th className="num">Live</th>
+                <th className="num">Ready</th>
+                <th className="num">In progress</th>
+                <th className="num">Not ready</th>
+                <th>Readiness</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const isOpen = open.has(r.code);
+                const value = readyPercent(r.counts);
+                return (
+                  <Fragment key={r.code}>
+                    <tr className={isOpen ? 'open' : undefined}>
+                      <th scope="row">
+                        <button
+                          type="button"
+                          className="row-toggle"
+                          aria-expanded={isOpen}
+                          aria-controls={`cl-${r.code}`}
+                          onClick={() => toggle(r.code)}
+                        >
+                          <span className="cb-code">{r.code}</span>
+                          <span className="row-name">{r.name}</span>
+                          <span className="chev" aria-hidden="true">
+                            <VIcon name="chevron" size={18} />
+                          </span>
+                        </button>
+                      </th>
+                      <td className="num">{r.systems.length}</td>
+                      <td className="num">{r.goingLive}</td>
+                      <td className="num">{r.counts.live}</td>
+                      <td className="num">{r.counts.ready}</td>
+                      <td className="num">{r.counts.in_progress}</td>
+                      <td className="num">{r.counts.not_ready}</td>
+                      <td>
+                        <span className="table-pct">
+                          <strong>{value}%</strong>
+                          <ProgressBar value={value} label={`${r.code} readiness`} />
+                        </span>
+                      </td>
+                    </tr>
+                    {isOpen && (
+                      <tr className="detail" id={`cl-${r.code}`}>
+                        <td colSpan={8}>
+                          <ul className="detail-list">
+                            {r.systems.map((s) => (
+                              <li key={s.code}>
+                                <span className="sys-code">{s.code}</span>
+                                <span className="sys-name">{s.name}</span>
+                                <span className="muted small">Phase {s.phase}</span>
+                                <StatusPill status={s.status} />
+                              </li>
+                            ))}
+                          </ul>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function SystemList({
+  id,
+  title,
+  tone,
+  systems,
+  empty,
+  clusterName,
+}: {
+  id: string;
+  title: string;
+  tone: 'going' | 'live' | 'attention';
+  systems: PublicSystem[];
+  empty: string;
+  clusterName: (code: string) => string;
+}) {
+  const icon: ViewerIcon = tone === 'going' ? 'rocket' : tone === 'live' ? 'live' : 'not_ready';
+  return (
+    <section className={`card-v list-card ${tone}`} id={id} aria-labelledby={`${id}-h`}>
+      <div className="card-head">
+        <h2 id={`${id}-h`}>
+          <span className={`h-icon ${tone}`} aria-hidden="true">
+            <VIcon name={icon} size={18} />
+          </span>
+          {title}
+        </h2>
+        <span className="count-pill">
+          {systems.length} {plural(systems.length, 'system')}
+        </span>
+      </div>
+      {systems.length === 0 ? (
+        <p className="muted">{empty}</p>
+      ) : (
+        <ul className="sys-list">
+          {systems.map((s) => (
+            <li key={s.code}>
+              <span className="sys-code">{s.code}</span>
+              <span className="sys-name">
+                {s.name}
+                <span className="sys-cluster" title={clusterName(s.clusterCode)}>
+                  {s.clusterCode} · Phase {s.phase}
+                </span>
+              </span>
+              <StatusPill status={s.status} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  );
+}
+
+function FullscreenButton() {
+  const [isFull, setIsFull] = useState(false);
+  useEffect(() => {
+    const onChange = () => setIsFull(Boolean(document.fullscreenElement));
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+  if (!document.fullscreenEnabled) return null;
+  const toggle = () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen().catch(() => {});
+  };
+  return (
+    <button type="button" className="v-btn" onClick={toggle}>
+      <VIcon name={isFull ? 'collapse' : 'expand'} size={18} />
+      {isFull ? 'Exit full screen' : 'Full screen'}
+    </button>
+  );
+}
