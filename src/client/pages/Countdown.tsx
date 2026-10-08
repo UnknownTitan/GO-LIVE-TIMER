@@ -117,9 +117,7 @@ const SECTIONS: { id: string; label: string; icon: ViewerIcon }[] = [
   { id: 'overview', label: 'Overview', icon: 'home' },
   { id: 'charts', label: 'Charts', icon: 'chart' },
   { id: 'clusters', label: 'Clusters', icon: 'table' },
-  { id: 'going-live', label: 'Going live', icon: 'rocket' },
   { id: 'live', label: 'Already live', icon: 'live' },
-  { id: 'attention', label: 'Needs attention', icon: 'not_ready' },
 ];
 
 export function CountdownPage() {
@@ -248,9 +246,7 @@ export function Dashboard({ data, c }: { data: CountdownData; c: Countdown | nul
       .map(([name, systems]) => ({ name, systems, counts: countStatuses(systems) }));
   }, [data.systems]);
 
-  const goingLive = scope.filter((s) => s.goLive === 'yes');
   const live = data.systems.filter((s) => s.status === 'live');
-  const attention = scope.filter((s) => s.status === 'not_ready');
   const clusterName = (code: string) => data.clusterNames.find((cl) => cl.code === code)?.name ?? code;
 
   const tiles: { key: string; value: number; label: string; sub: string; status?: SystemStatus; bar?: number }[] = [
@@ -373,27 +369,10 @@ export function Dashboard({ data, c }: { data: CountdownData; c: Countdown | nul
 
         <div className="v-lists">
           <SystemList
-            id="going-live"
-            title="Going live this release"
-            tone="going"
-            systems={goingLive}
-            empty="No systems confirmed for go-live yet."
-            clusterName={clusterName}
-          />
-          <SystemList
             id="live"
             title="Already live"
-            tone="live"
             systems={live}
             empty="No systems are live yet."
-            clusterName={clusterName}
-          />
-          <SystemList
-            id="attention"
-            title="Needs attention"
-            tone="attention"
-            systems={attention}
-            empty="Nothing in this go-live is marked not ready."
             clusterName={clusterName}
           />
         </div>
@@ -557,25 +536,22 @@ function ClusterTable({ rows, total }: { rows: ClusterRow[]; total: number }) {
 function SystemList({
   id,
   title,
-  tone,
   systems,
   empty,
   clusterName,
 }: {
   id: string;
   title: string;
-  tone: 'going' | 'live' | 'attention';
   systems: PublicSystem[];
   empty: string;
   clusterName: (code: string) => string;
 }) {
-  const icon: ViewerIcon = tone === 'going' ? 'rocket' : tone === 'live' ? 'live' : 'not_ready';
   return (
-    <section className={`card-v list-card ${tone}`} id={id} aria-labelledby={`${id}-h`}>
+    <section className="card-v list-card live" id={id} aria-labelledby={`${id}-h`}>
       <div className="card-head">
         <h2 id={`${id}-h`}>
-          <span className={`h-icon ${tone}`} aria-hidden="true">
-            <VIcon name={icon} size={18} />
+          <span className="h-icon live" aria-hidden="true">
+            <VIcon name="live" size={18} />
           </span>
           {title}
         </h2>

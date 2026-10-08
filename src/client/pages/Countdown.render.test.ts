@@ -43,10 +43,10 @@ describe('viewer dashboard', () => {
     expect(html).toContain('Readiness by phase');
     expect(html).toContain('Systems by status');
     expect(html).toContain('This go-live by cluster');
-    expect(html).toContain('Going live this release');
     expect(html).toContain('Already live');
-    expect(html).toContain('Needs attention');
-    expect(html).toContain('Records Management System'); // not ready, in the attention list
+    expect(html).toContain('Governance Portal'); // live, in the "Already live" list
+    expect(html).not.toContain('Going live this release');
+    expect(html).not.toContain('Needs attention');
     // Phase 2 systems are counted under "Phase 2" but not in this go-live's donut total (4).
     expect(html).toMatch(/class="donut-total"[^>]*>4</);
     expect(html).toContain('Phase 2');
