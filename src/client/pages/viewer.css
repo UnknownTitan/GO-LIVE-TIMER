@@ -563,9 +563,64 @@
     transform: none;
   }
 }
-.tile-detail {
-  margin: -8px 0 22px;
-  animation: drop-in 0.25s ease-out both;
+/* Modal: native <dialog> in the top layer, still inside .viewer so the theme tokens apply. */
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+.td-modal {
+  width: min(980px, calc(100vw - 32px));
+  max-height: min(86vh, 900px);
+  padding: 0;
+  border: 1px solid var(--v-border-strong);
+  border-radius: 22px;
+  background: var(--v-card-solid);
+  color: var(--v-body);
+  box-shadow: 0 32px 80px -24px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  animation: modal-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.td-modal[open] {
+  display: flex;
+}
+.td-modal::backdrop {
+  background: rgba(6, 10, 20, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  animation: fade-in 0.2s ease-out both;
+}
+.td-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  padding: 22px 24px 0;
+}
+.td-body h2 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--v-text);
+}
+.td-body .card-sub {
+  margin: 6px 0 16px;
+  color: var(--v-muted);
+  font-size: 0.85rem;
 }
 .td-head {
   display: flex;
@@ -624,9 +679,10 @@
   font-size: 0.9rem;
 }
 .td-scroll {
-  max-height: min(60vh, 560px);
+  flex: 1;
+  min-height: 0;
   overflow: auto;
-  margin: 0 -20px -20px;
+  margin: 0 -24px;
   border-top: 1px solid var(--v-border);
   scrollbar-width: thin;
 }
@@ -726,8 +782,11 @@
     padding-left: 12px;
     padding-right: 12px;
   }
+  .td-body {
+    padding: 18px 16px 0;
+  }
   .td-scroll {
-    margin: 0 -20px -20px;
+    margin: 0 -16px;
   }
 }
 

@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { computeCountdown, formatGoLive, formatShortDate, plural, type Countdown } from '../../shared/calc';
 import { STATUS_LABELS, type SystemStatus } from '../../shared/status';
 import type { CountdownData, PublicSystem } from '../../shared/validation';
@@ -280,9 +280,8 @@ export function Dashboard({ data, c }: { data: CountdownData; c: Countdown | nul
               <button
                 type="button"
                 className={`tile${open ? ' active' : ''}`}
-                aria-expanded={open}
-                aria-controls="tile-detail"
-                onClick={() => setOpenTile(open ? null : t.key)}
+                aria-haspopup="dialog"
+                onClick={() => setOpenTile(t.key)}
               >
                 <span className={`tile-icon ${t.status ?? t.key}`} aria-hidden="true">
                   <VIcon name={t.status ?? (t.key === 'all' ? 'layers' : 'rocket')} size={22} />
@@ -336,7 +335,11 @@ function tileSubtitle(key: string, phasesLabel: string): string {
   return `${STATUS_LABELS[key as SystemStatus]} systems in ${scope}.`;
 }
 
-/** The systems behind a summary card: one table grouped by cluster, with phase filters and search. */
+/**
+ * Modal listing the systems behind a summary card: one table grouped by cluster, with phase
+ * filters and search. Uses the native <dialog>, so Escape, focus trapping and returning focus
+ * to the card are handled by the browser.
+ */
 export function TileDetail({
   title,
   subtitle,
@@ -354,12 +357,18 @@ export function TileDetail({
 }) {
   const [query, setQuery] = useState('');
   const [phase, setPhase] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
+    const dialog = dialogRef.current;
+    if (dialog && !dialog.open) dialog.showModal();
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    // No close() here: removing the element ends the modal, and closing it would fire onClose.
+    return () => {
+      document.body.style.overflow = overflow;
+    };
+  }, []);
 
   const q = query.trim().toLowerCase();
   const shown = systems.filter(
@@ -374,7 +383,18 @@ export function TileDetail({
   const columns = showStatus ? 4 : 3;
 
   return (
-    <section className="card-v tile-detail" id="tile-detail" aria-labelledby="tile-detail-h">
+    <dialog
+      ref={dialogRef}
+      className="td-modal"
+      id="tile-detail"
+      aria-labelledby="tile-detail-h"
+      onClose={onClose}
+      onClick={(e) => {
+        // A click on the backdrop lands on the <dialog> element itself.
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="td-body">
       <div className="td-head">
         <div>
           <h2 id="tile-detail-h">
@@ -466,7 +486,8 @@ export function TileDetail({
           )}
         </>
       )}
-    </section>
+      </div>
+    </dialog>
   );
 }
 

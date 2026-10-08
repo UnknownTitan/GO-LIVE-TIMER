@@ -64,7 +64,7 @@ describe('viewer dashboard', () => {
 describe('summary card detail', () => {
   it('makes each summary card a button that opens its systems', () => {
     const html = render('2026-10-08T20:00:00Z');
-    expect(html.match(/<button type="button" class="tile"[^>]*aria-expanded="false"/g)).toHaveLength(6);
+    expect(html.match(/<button type="button" class="tile"[^>]*aria-haspopup="dialog"/g)).toHaveLength(6);
   });
 
   it('lists the systems behind a card, grouped by cluster', () => {
@@ -83,5 +83,6 @@ describe('summary card detail', () => {
     expect(html).toContain('Governance, Board, Statutory &amp; Records');
     expect(html).not.toContain('NLEMS');
     expect(html).toContain('1 system');
+    expect(html).toMatch(/^<dialog/);
   });
 });
