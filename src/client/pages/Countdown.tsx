@@ -212,6 +212,7 @@ interface ClusterRow {
 }
 
 export function Dashboard({ data, c }: { data: CountdownData; c: Countdown | null }) {
+  const [openTile, setOpenTile] = useState<string | null>(null);
   const scope = useMemo(() => data.systems.filter((s) => s.inCountdown), [data.systems]);
   const counts = useMemo(() => countStatuses(scope), [scope]);
   const total = scope.length;
@@ -287,23 +288,49 @@ export function Dashboard({ data, c }: { data: CountdownData; c: Countdown | nul
         <CountdownHero c={c} />
       </header>
 
-      <ul className="tiles" aria-label="Summary">
-        {tiles.map((t) => (
-          <li key={t.key} className="tile">
-            <span className={`tile-icon ${t.status ?? t.key}`} aria-hidden="true">
-              <VIcon name={t.status ?? (t.key === 'all' ? 'layers' : 'rocket')} size={22} />
-            </span>
-            <span className="tile-text">
-              <span className="tile-value">{t.value}</span>
-              <span className="tile-label">{t.label}</span>
-              <span className="tile-sub">{t.sub}</span>
-            </span>
-            {t.bar !== undefined && (
-              <ProgressBar value={t.bar} label={`${t.label}: ${t.bar}%`} tone={t.status ?? 'scope'} />
-            )}
-          </li>
-        ))}
+      <ul className="tiles" aria-label="Summary. Select a card to see its systems.">
+        {tiles.map((t) => {
+          const open = openTile === t.key;
+          return (
+            <li key={t.key}>
+              <button
+                type="button"
+                className={`tile${open ? ' active' : ''}`}
+                aria-expanded={open}
+                aria-controls="tile-detail"
+                onClick={() => setOpenTile(open ? null : t.key)}
+              >
+                <span className={`tile-icon ${t.status ?? t.key}`} aria-hidden="true">
+                  <VIcon name={t.status ?? (t.key === 'all' ? 'layers' : 'rocket')} size={22} />
+                </span>
+                <span className="tile-text">
+                  <span className="tile-value">{t.value}</span>
+                  <span className="tile-label">{t.label}</span>
+                  <span className="tile-sub">{t.sub}</span>
+                </span>
+                <span className="tile-chev" aria-hidden="true">
+                  <VIcon name="chevron" size={16} />
+                </span>
+                {t.bar !== undefined && (
+                  <ProgressBar value={t.bar} label={`${t.label}: ${t.bar}%`} tone={t.status ?? 'scope'} />
+                )}
+              </button>
+            </li>
+          );
+        })}
       </ul>
+
+      {openTile && (
+        <TileDetail
+          key={openTile}
+          title={tiles.find((t) => t.key === openTile)!.label}
+          subtitle={tileSubtitle(openTile, phasesLabel)}
+          systems={tileSystems(openTile, data.systems, scope)}
+          clusterNames={data.clusterNames}
+          showStatus={openTile === 'all' || openTile === 'scope'}
+          onClose={() => setOpenTile(null)}
+        />
+      )}
 
       <div className="v-grid three" id="charts">
         <section className="card-v" aria-labelledby="phase-h">
@@ -365,6 +392,121 @@ export function Dashboard({ data, c }: { data: CountdownData; c: Countdown | nul
         <ClusterTable rows={clusterRows} total={total} />
       </div>
     </>
+  );
+}
+
+function tileSystems(key: string, all: PublicSystem[], scope: PublicSystem[]): PublicSystem[] {
+  if (key === 'all') return all;
+  if (key === 'scope') return scope;
+  return scope.filter((s) => s.status === key);
+}
+
+function tileSubtitle(key: string, phasesLabel: string): string {
+  if (key === 'all') return 'Every system in the workplan, all phases.';
+  const scope = `this go-live${phasesLabel ? ` (phases ${phasesLabel}, plus any system confirmed to go live)` : ''}`;
+  if (key === 'scope') return `Systems counted in ${scope}.`;
+  return `${STATUS_LABELS[key as SystemStatus]} systems in ${scope}.`;
+}
+
+/** The systems behind a summary card, grouped by cluster, with a search box. */
+export function TileDetail({
+  title,
+  subtitle,
+  systems,
+  clusterNames,
+  showStatus,
+  onClose,
+}: {
+  title: string;
+  subtitle: string;
+  systems: PublicSystem[];
+  clusterNames: { code: string; name: string }[];
+  showStatus: boolean;
+  onClose: () => void;
+}) {
+  const [query, setQuery] = useState('');
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const q = query.trim().toLowerCase();
+  const shown = q ? systems.filter((s) => `${s.code} ${s.name}`.toLowerCase().includes(q)) : systems;
+  const groups = clusterNames
+    .map((cl) => ({ ...cl, items: shown.filter((s) => s.clusterCode === cl.code) }))
+    .filter((g) => g.items.length > 0);
+  const byPhase = [...new Set(systems.map((s) => s.phase))]
+    .sort()
+    .map((p) => ({ phase: p, n: systems.filter((s) => s.phase === p).length }));
+
+  return (
+    <section className="card-v tile-detail" id="tile-detail" aria-labelledby="tile-detail-h">
+      <div className="card-head">
+        <h2 id="tile-detail-h">
+          {title}
+          <span className="count-pill">
+            {systems.length} {plural(systems.length, 'system')}
+          </span>
+        </h2>
+        <button type="button" className="v-btn" onClick={onClose}>
+          Close
+        </button>
+      </div>
+      <p className="card-sub">{subtitle}</p>
+
+      {systems.length === 0 ? (
+        <p className="muted">No systems here yet.</p>
+      ) : (
+        <>
+          <div className="td-tools">
+            <ul className="td-phases" aria-label="By phase">
+              {byPhase.map((p) => (
+                <li key={p.phase}>
+                  Phase {p.phase} <strong>{p.n}</strong>
+                </li>
+              ))}
+            </ul>
+            {systems.length > 8 && (
+              <label className="td-search">
+                <span className="sr-only">Search these systems</span>
+                <input
+                  type="search"
+                  value={query}
+                  placeholder="Search by code or name…"
+                  onChange={(e) => setQuery(e.target.value)}
+                />
+              </label>
+            )}
+          </div>
+          {groups.length === 0 ? (
+            <p className="muted">No systems match “{query}”.</p>
+          ) : (
+            <div className="td-groups">
+              {groups.map((g) => (
+                <div key={g.code} className="td-group">
+                  <h3>
+                    <span className="cb-code">{g.code}</span> {g.name}
+                    <span className="muted"> · {g.items.length}</span>
+                  </h3>
+                  <ul className="detail-list">
+                    {g.items.map((s) => (
+                      <li key={s.code}>
+                        <span className="sys-code">{s.code}</span>
+                        <span className="sys-name">{s.name}</span>
+                        <span className="muted small">Phase {s.phase}</span>
+                        {showStatus ? <StatusPill status={s.status} /> : <span />}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+    </section>
   );
 }
 

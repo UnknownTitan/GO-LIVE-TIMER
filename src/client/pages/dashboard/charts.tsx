@@ -165,7 +165,7 @@ export function StatusBar({ counts, label }: { counts: StatusCounts; label: stri
 /** Single-value progress bar (one series, so no legend). */
 export function ProgressBar({ value, label, tone = 'ready' }: { value: number; label: string; tone?: string }) {
   return (
-    <div
+    <span
       className="progress"
       role="progressbar"
       aria-label={label}
@@ -175,7 +175,7 @@ export function ProgressBar({ value, label, tone = 'ready' }: { value: number; l
       aria-valuetext={`${value}%`}
     >
       <span className={`progress-fill ${tone}`} style={{ width: `${Math.min(100, value)}%` }} />
-    </div>
+    </span>
   );
 }
 

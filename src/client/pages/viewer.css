@@ -470,9 +470,17 @@
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 14px;
 }
+.tiles > li {
+  display: flex;
+}
 .tile {
+  font: inherit;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  color: inherit;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 12px 12px;
   align-content: start;
   padding: 16px;
@@ -481,6 +489,19 @@
 .tile:hover {
   transform: translateY(-2px);
   border-color: var(--v-border-strong);
+}
+.tile.active {
+  border-color: var(--v-gold);
+  box-shadow: 0 0 0 1px var(--v-gold), var(--v-shadow);
+}
+.tile-chev {
+  align-self: start;
+  color: var(--v-muted);
+  transition: transform 0.2s;
+}
+.tile.active .tile-chev {
+  transform: rotate(90deg);
+  color: var(--v-gold);
 }
 .tile .progress {
   grid-column: 1 / -1;
@@ -530,6 +551,85 @@
 .tile-sub {
   font-size: 0.8rem;
   color: var(--v-muted);
+}
+
+/* ---------- Summary card detail panel ---------- */
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.tile-detail {
+  margin: -8px 0 22px;
+  animation: drop-in 0.25s ease-out both;
+}
+.tile-detail h2 {
+  gap: 10px;
+}
+.td-tools {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px 16px;
+  margin-bottom: 14px;
+}
+.td-phases {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.td-phases li {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--v-track);
+  font-size: 0.8rem;
+  color: var(--v-muted);
+}
+.td-phases strong {
+  color: var(--v-text);
+  margin-left: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.td-search input {
+  min-width: min(280px, 100%);
+  min-height: 38px;
+  border-radius: 12px;
+  border: 1px solid var(--v-border-strong);
+  background: var(--v-card-solid);
+  color: var(--v-text);
+  padding: 6px 12px;
+}
+.td-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
+  gap: 14px 24px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+@media (max-width: 520px) {
+  .td-groups {
+    grid-template-columns: 1fr;
+  }
+}
+.td-group h3 {
+  margin: 0 0 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--v-text);
+}
+.td-group .detail-list li {
+  grid-template-columns: 96px minmax(0, 1fr) auto auto;
 }
 
 /* ---------- Grid & cards ---------- */
@@ -636,6 +736,7 @@
   }
 }
 .progress {
+  display: block;
   height: 6px;
   border-radius: 999px;
   background: var(--v-track);

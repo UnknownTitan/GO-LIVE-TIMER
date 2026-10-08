@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { computeCountdown } from '../../shared/calc';
 import type { CountdownData, PublicSystem } from '../../shared/validation';
-import { Dashboard, normalise } from './Countdown';
+import { Dashboard, normalise, TileDetail } from './Countdown';
 
 const systems: PublicSystem[] = [
   { code: 'S001', name: 'Governance Portal', clusterCode: 'C1', phase: '1A', status: 'live', goLive: 'yes', inCountdown: true },
@@ -59,5 +59,30 @@ describe('viewer dashboard', () => {
     const empty = { ...data, systems: [], clusterNames: [] };
     const html = renderToStaticMarkup(createElement(Dashboard, { data: empty, c: null }));
     expect(html).toContain('The go-live date has not been set yet.');
+  });
+});
+
+describe('summary card detail', () => {
+  it('makes each summary card a button that opens its systems', () => {
+    const html = render('2026-10-08T20:00:00Z');
+    expect(html.match(/<button type="button" class="tile"[^>]*aria-expanded="false"/g)).toHaveLength(6);
+  });
+
+  it('lists the systems behind a card, grouped by cluster', () => {
+    const ready = systems.filter((s) => s.status === 'ready');
+    const html = renderToStaticMarkup(
+      createElement(TileDetail, {
+        title: 'Ready',
+        subtitle: 'Ready systems in this go-live.',
+        systems: ready,
+        clusterNames: data.clusterNames,
+        showStatus: false,
+        onClose: () => {},
+      }),
+    );
+    expect(html).toContain('Board Document Management System');
+    expect(html).toContain('Governance, Board, Statutory &amp; Records');
+    expect(html).not.toContain('NLEMS');
+    expect(html).toContain('1 system');
   });
 });
