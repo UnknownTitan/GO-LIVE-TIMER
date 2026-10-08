@@ -567,8 +567,14 @@
   margin: -8px 0 22px;
   animation: drop-in 0.25s ease-out both;
 }
-.tile-detail h2 {
-  gap: 10px;
+.td-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.td-head .card-sub {
+  margin-bottom: 14px;
 }
 .td-tools {
   display: flex;
@@ -576,59 +582,153 @@
   justify-content: space-between;
   align-items: center;
   gap: 10px 16px;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 .td-phases {
-  list-style: none;
-  margin: 0;
-  padding: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
-.td-phases li {
-  padding: 4px 10px;
+.td-phases button {
+  font: inherit;
+  padding: 5px 12px;
   border-radius: 999px;
+  border: 1px solid var(--v-border);
   background: var(--v-track);
-  font-size: 0.8rem;
   color: var(--v-muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+.td-phases button:hover {
+  border-color: var(--v-border-strong);
+  color: var(--v-text);
+}
+.td-phases button[aria-pressed='true'] {
+  background: var(--v-text);
+  border-color: var(--v-text);
+  color: var(--v-card-solid);
 }
 .td-phases strong {
-  color: var(--v-text);
   margin-left: 4px;
   font-variant-numeric: tabular-nums;
 }
 .td-search input {
-  min-width: min(280px, 100%);
+  width: min(300px, 100%);
   min-height: 38px;
   border-radius: 12px;
   border: 1px solid var(--v-border-strong);
   background: var(--v-card-solid);
   color: var(--v-text);
   padding: 6px 12px;
+  font-size: 0.9rem;
 }
-.td-groups {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(420px, 100%), 1fr));
-  gap: 14px 24px;
-  max-height: 520px;
-  overflow-y: auto;
-  padding-right: 4px;
+.td-scroll {
+  max-height: min(60vh, 560px);
+  overflow: auto;
+  margin: 0 -20px -20px;
+  border-top: 1px solid var(--v-border);
   scrollbar-width: thin;
 }
-@media (max-width: 520px) {
-  .td-groups {
-    grid-template-columns: 1fr;
-  }
+.td-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
 }
-.td-group h3 {
-  margin: 0 0 6px;
-  font-size: 0.85rem;
+.td-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--v-card-solid);
+  text-align: left;
+  padding: 10px 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--v-muted);
+  border-bottom: 1px solid var(--v-border);
+}
+.td-table td {
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--v-border);
+  vertical-align: middle;
+}
+.td-table tbody tr:not(.td-group):hover td {
+  background: var(--v-hover);
+}
+.td-group th {
+  position: sticky;
+  top: 37px;
+  z-index: 1;
+  text-align: left;
+  padding: 10px 20px 8px;
+  background: var(--v-card-solid);
+  border-bottom: 1px solid var(--v-border);
   font-weight: 600;
   color: var(--v-text);
 }
-.td-group .detail-list li {
-  grid-template-columns: 96px minmax(0, 1fr) auto auto;
+.td-group th > * {
+  vertical-align: middle;
+}
+.td-group .cb-code {
+  display: inline-grid;
+  place-items: center;
+  min-width: 38px;
+  height: 24px;
+  padding: 0 6px;
+  margin-right: 10px;
+  border-radius: 8px;
+  background: var(--s-ready-bg);
+  color: var(--s-ready-fg);
+  font-size: 0.78rem;
+}
+.td-group-name {
+  font-size: 0.9rem;
+}
+.td-group-n {
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--v-track);
+  color: var(--v-muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+.td-code {
+  width: 120px;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--v-muted);
+  font-variant-numeric: tabular-nums;
+}
+.td-name {
+  color: var(--v-text);
+  font-weight: 500;
+}
+.td-phase {
+  width: 80px;
+  white-space: nowrap;
+  color: var(--v-muted);
+}
+.td-status {
+  width: 140px;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .td-code {
+    width: 80px;
+  }
+  .td-table td,
+  .td-table thead th,
+  .td-group th {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .td-scroll {
+    margin: 0 -20px -20px;
+  }
 }
 
 /* ---------- Grid & cards ---------- */

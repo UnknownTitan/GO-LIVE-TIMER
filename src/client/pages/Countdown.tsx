@@ -336,7 +336,7 @@ function tileSubtitle(key: string, phasesLabel: string): string {
   return `${STATUS_LABELS[key as SystemStatus]} systems in ${scope}.`;
 }
 
-/** The systems behind a summary card, grouped by cluster, with a search box. */
+/** The systems behind a summary card: one table grouped by cluster, with phase filters and search. */
 export function TileDetail({
   title,
   subtitle,
@@ -353,6 +353,7 @@ export function TileDetail({
   onClose: () => void;
 }) {
   const [query, setQuery] = useState('');
+  const [phase, setPhase] = useState<string | null>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
@@ -361,75 +362,106 @@ export function TileDetail({
   }, [onClose]);
 
   const q = query.trim().toLowerCase();
-  const shown = q ? systems.filter((s) => `${s.code} ${s.name}`.toLowerCase().includes(q)) : systems;
+  const shown = systems.filter(
+    (s) => (!phase || s.phase === phase) && (!q || `${s.code} ${s.name}`.toLowerCase().includes(q)),
+  );
   const groups = clusterNames
     .map((cl) => ({ ...cl, items: shown.filter((s) => s.clusterCode === cl.code) }))
     .filter((g) => g.items.length > 0);
-  const byPhase = [...new Set(systems.map((s) => s.phase))]
+  const phases = [...new Set(systems.map((s) => s.phase))]
     .sort()
     .map((p) => ({ phase: p, n: systems.filter((s) => s.phase === p).length }));
+  const columns = showStatus ? 4 : 3;
 
   return (
     <section className="card-v tile-detail" id="tile-detail" aria-labelledby="tile-detail-h">
-      <div className="card-head">
-        <h2 id="tile-detail-h">
-          {title}
-          <span className="count-pill">
-            {systems.length} {plural(systems.length, 'system')}
-          </span>
-        </h2>
+      <div className="td-head">
+        <div>
+          <h2 id="tile-detail-h">
+            {title}
+            <span className="count-pill">
+              {systems.length} {plural(systems.length, 'system')}
+            </span>
+          </h2>
+          <p className="card-sub">{subtitle}</p>
+        </div>
         <button type="button" className="v-btn" onClick={onClose}>
           Close
         </button>
       </div>
-      <p className="card-sub">{subtitle}</p>
 
       {systems.length === 0 ? (
         <p className="muted">No systems here yet.</p>
       ) : (
         <>
           <div className="td-tools">
-            <ul className="td-phases" aria-label="By phase">
-              {byPhase.map((p) => (
-                <li key={p.phase}>
-                  Phase {p.phase} <strong>{p.n}</strong>
-                </li>
-              ))}
-            </ul>
-            {systems.length > 8 && (
-              <label className="td-search">
-                <span className="sr-only">Search these systems</span>
-                <input
-                  type="search"
-                  value={query}
-                  placeholder="Search by code or name…"
-                  onChange={(e) => setQuery(e.target.value)}
-                />
-              </label>
+            {phases.length > 1 ? (
+              <div className="td-phases" role="group" aria-label="Filter by phase">
+                <button type="button" aria-pressed={!phase} onClick={() => setPhase(null)}>
+                  All <strong>{systems.length}</strong>
+                </button>
+                {phases.map((p) => (
+                  <button
+                    key={p.phase}
+                    type="button"
+                    aria-pressed={phase === p.phase}
+                    onClick={() => setPhase(phase === p.phase ? null : p.phase)}
+                  >
+                    Phase {p.phase} <strong>{p.n}</strong>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <span className="muted small">All in phase {phases[0]?.phase}</span>
             )}
+            <label className="td-search">
+              <span className="sr-only">Search these systems</span>
+              <input
+                type="search"
+                value={query}
+                placeholder="Search code or name…"
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </label>
           </div>
+
           {groups.length === 0 ? (
-            <p className="muted">No systems match “{query}”.</p>
+            <p className="muted">No systems match.</p>
           ) : (
-            <div className="td-groups">
-              {groups.map((g) => (
-                <div key={g.code} className="td-group">
-                  <h3>
-                    <span className="cb-code">{g.code}</span> {g.name}
-                    <span className="muted"> · {g.items.length}</span>
-                  </h3>
-                  <ul className="detail-list">
+            <div className="td-scroll">
+              <table className="td-table">
+                <thead>
+                  <tr>
+                    <th className="td-code">Code</th>
+                    <th>System</th>
+                    <th className="td-phase">Phase</th>
+                    {showStatus && <th className="td-status">Status</th>}
+                  </tr>
+                </thead>
+                {groups.map((g) => (
+                  <tbody key={g.code}>
+                    <tr className="td-group">
+                      <th colSpan={columns} scope="colgroup">
+                        <span className="cb-code">{g.code}</span>
+                        <span className="td-group-name">{g.name}</span>
+                        <span className="td-group-n">{g.items.length}</span>
+                      </th>
+                    </tr>
                     {g.items.map((s) => (
-                      <li key={s.code}>
-                        <span className="sys-code">{s.code}</span>
-                        <span className="sys-name">{s.name}</span>
-                        <span className="muted small">Phase {s.phase}</span>
-                        {showStatus ? <StatusPill status={s.status} /> : <span />}
-                      </li>
+                      <tr key={s.code}>
+                        <td className="td-code">{s.code}</td>
+                        <td className="td-name">{s.name}</td>
+                        <td className="td-phase">{s.phase}</td>
+                        {showStatus && (
+                          <td className="td-status">
+                            <StatusPill status={s.status} />
+                          </td>
+                        )}
+                      </tr>
                     ))}
-                  </ul>
-                </div>
-              ))}
+                  </tbody>
+                ))}
+              </table>
             </div>
           )}
         </>
