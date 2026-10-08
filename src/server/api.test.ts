@@ -18,6 +18,10 @@ let cookie: string[];
 beforeAll(async () => {
   await pool.query('DROP SCHEMA public CASCADE; CREATE SCHEMA public;');
   await migrate();
+  // Start from the workplan's defaults, not the readiness snapshot (migration 007).
+  await query(`UPDATE systems SET status = 'not_ready', go_live = 'tbd', updated_at = NULL, updated_by = NULL`);
+  await query(`UPDATE systems SET notes = NULL WHERE notes LIKE 'Release 1%' OR notes LIKE 'Follows after%'
+    OR notes LIKE 'Audit trail (CALS)%' OR notes LIKE 'HRMS (minimal)%' OR notes LIKE 'Not ready for Release 1%'`);
   await query('INSERT INTO admins (email, name, password_hash) VALUES ($1, $2, $3)', [
     ADMIN.email,
     'Scrum Master',

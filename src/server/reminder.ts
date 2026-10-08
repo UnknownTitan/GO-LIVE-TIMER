@@ -59,7 +59,7 @@ export async function buildTodaysMessage(now = new Date()): Promise<ReminderMess
     holidays: settings.holidays,
     clusters,
     readinessUpdatedAt: updatedAt,
-    appUrl: process.env.APP_URL,
+    appUrl: process.env.APP_URL ?? process.env.RENDER_EXTERNAL_URL,
   });
 }
 

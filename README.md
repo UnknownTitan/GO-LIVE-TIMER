@@ -50,6 +50,23 @@ from `.env.example`. Set `NODE_ENV=production` behind HTTPS so the session cooki
 Run **one** instance with the reminder enabled. On staging, set `REMINDER_CRON_ENABLED=false` (or
 leave the recipients empty) so the team does not get duplicate emails.
 
+## Deploy to Render
+
+`render.yaml` is a Render Blueprint: one web service (API, built frontend and reminder job) and a
+PostgreSQL database, both in Frankfurt.
+
+1. In Render, choose **New > Blueprint** and pick this GitHub repository.
+2. Fill in `ADMIN_EMAIL` and `ADMIN_PASSWORD` (12+ characters). That admin is created on first
+   start; it is never overwritten later. Leave the SMTP values empty to log reminders instead of
+   sending them.
+3. Apply. Migrations run on start-up, including `007_release1_snapshot.sql`, so the new database
+   starts with the Release 1 go-live decisions and readiness statuses.
+4. Share `https://<service>.onrender.com` with the team; admins sign in at `/admin/login`.
+
+On the free plans the service sleeps after 15 minutes without traffic (the first visit then takes
+about a minute, and the 18:00 reminder only runs while it is awake), and the free database expires
+after 30 days. Use a paid instance and database for anything the team relies on.
+
 ## Admin accounts
 
 ```sh
