@@ -117,7 +117,6 @@ const SECTIONS: { id: string; label: string; icon: ViewerIcon }[] = [
   { id: 'overview', label: 'Overview', icon: 'home' },
   { id: 'charts', label: 'Charts', icon: 'chart' },
   { id: 'clusters', label: 'Clusters', icon: 'table' },
-  { id: 'live', label: 'Already live', icon: 'live' },
 ];
 
 export function CountdownPage() {
@@ -246,8 +245,6 @@ export function Dashboard({ data, c }: { data: CountdownData; c: Countdown | nul
       .map(([name, systems]) => ({ name, systems, counts: countStatuses(systems) }));
   }, [data.systems]);
 
-  const live = data.systems.filter((s) => s.status === 'live');
-  const clusterName = (code: string) => data.clusterNames.find((cl) => cl.code === code)?.name ?? code;
 
   const tiles: { key: string; value: number; label: string; sub: string; status?: SystemStatus; bar?: number }[] = [
     { key: 'all', value: data.systems.length, label: 'Total systems', sub: `All phases · ${data.clusterNames.length} clusters` },
@@ -364,18 +361,8 @@ export function Dashboard({ data, c }: { data: CountdownData; c: Countdown | nul
         </section>
       </div>
 
-      <div className="v-grid two">
+      <div className="v-grid">
         <ClusterTable rows={clusterRows} total={total} />
-
-        <div className="v-lists">
-          <SystemList
-            id="live"
-            title="Already live"
-            systems={live}
-            empty="No systems are live yet."
-            clusterName={clusterName}
-          />
-        </div>
       </div>
     </>
   );
@@ -528,54 +515,6 @@ function ClusterTable({ rows, total }: { rows: ClusterRow[]; total: number }) {
             </tbody>
           </table>
         </div>
-      )}
-    </section>
-  );
-}
-
-function SystemList({
-  id,
-  title,
-  systems,
-  empty,
-  clusterName,
-}: {
-  id: string;
-  title: string;
-  systems: PublicSystem[];
-  empty: string;
-  clusterName: (code: string) => string;
-}) {
-  return (
-    <section className="card-v list-card live" id={id} aria-labelledby={`${id}-h`}>
-      <div className="card-head">
-        <h2 id={`${id}-h`}>
-          <span className="h-icon live" aria-hidden="true">
-            <VIcon name="live" size={18} />
-          </span>
-          {title}
-        </h2>
-        <span className="count-pill">
-          {systems.length} {plural(systems.length, 'system')}
-        </span>
-      </div>
-      {systems.length === 0 ? (
-        <p className="muted">{empty}</p>
-      ) : (
-        <ul className="sys-list">
-          {systems.map((s) => (
-            <li key={s.code}>
-              <span className="sys-code">{s.code}</span>
-              <span className="sys-name">
-                {s.name}
-                <span className="sys-cluster" title={clusterName(s.clusterCode)}>
-                  {s.clusterCode} · Phase {s.phase}
-                </span>
-              </span>
-              <StatusPill status={s.status} />
-            </li>
-          ))}
-        </ul>
       )}
     </section>
   );

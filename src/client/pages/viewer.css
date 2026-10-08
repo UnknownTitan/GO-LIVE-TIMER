@@ -1005,50 +1005,7 @@ tr.detail td {
   background: var(--v-hover);
 }
 
-/* ---------- System lists ---------- */
-.v-lists {
-  display: grid;
-  gap: 18px;
-}
-.list-card {
-  position: relative;
-  overflow: hidden;
-}
-.list-card::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto 0;
-  height: 3px;
-  background: var(--s-ready);
-}
-.list-card.live::before {
-  background: var(--s-live);
-}
-.list-card.attention::before {
-  background: var(--s-not_ready);
-}
-.list-card .card-head {
-  margin-bottom: 12px;
-}
-.sys-list {
-  list-style: none;
-  margin: 0 -8px;
-  padding: 0;
-  max-height: 300px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-}
-.sys-list li {
-  display: grid;
-  grid-template-columns: 92px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  padding: 8px;
-  border-radius: 12px;
-}
-.sys-list li:hover {
-  background: var(--v-hover);
-}
+/* ---------- System rows (cluster detail) ---------- */
 .viewer .sys-code {
   font-weight: 600;
   font-size: 0.8rem;
@@ -1061,12 +1018,6 @@ tr.detail td {
   font-size: 0.9rem;
   font-weight: 500;
   overflow-wrap: anywhere;
-}
-.sys-cluster {
-  display: block;
-  font-size: 0.76rem;
-  font-weight: 400;
-  color: var(--v-muted);
 }
 .status-pill {
   display: inline-flex;
@@ -1105,11 +1056,9 @@ tr.detail td {
 }
 
 @media (max-width: 520px) {
-  .sys-list li,
   .detail-list li {
     grid-template-columns: minmax(0, 1fr) auto;
   }
-  .sys-list .sys-code,
   .detail-list .sys-code {
     grid-column: 1 / -1;
   }
