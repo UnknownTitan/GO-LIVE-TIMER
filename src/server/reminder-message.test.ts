@@ -14,12 +14,13 @@ const base: ReminderInput = {
 };
 
 describe('composeReminder', () => {
-  it('writes the daily status with days, working days and readiness', () => {
+  it('writes the daily status with days left and readiness', () => {
     const m = composeReminder(base);
     expect(m.kind).toBe('status');
     expect(m.subject).toBe('CLET go-live: 6 days to go');
     expect(m.text).toContain('Go-live: Thursday 15 October 2026, 10:00 GMT');
-    expect(m.text).toContain('Working days left: 5');
+    expect(m.text).toContain('Days left: 6');
+    expect(m.text).not.toMatch(/working days/i);
     expect(m.text).not.toMatch(/sprint/i);
     expect(m.text).toContain('Readiness: 13 of 20 systems ready (65%)');
     expect(m.text).toContain('Finance: 0 of 4 (0%)');

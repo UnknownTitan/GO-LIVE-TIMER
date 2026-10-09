@@ -58,7 +58,6 @@ export function composeReminder(input: ReminderInput): ReminderMessage {
     `Go-live: ${formatGoLive(goLiveAt)}`,
     '',
     `Days left: ${c.days}`,
-    `Working days left: ${c.workingDaysLeft}`,
     '',
     readinessLines(input),
   ];

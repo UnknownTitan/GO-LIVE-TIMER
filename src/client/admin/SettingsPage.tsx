@@ -12,7 +12,7 @@ export default function SettingsPage() {
       <header className="page-head">
         <div>
           <h1>Settings &amp; reminder</h1>
-          <p className="lede">The countdown's go-live date and texts, public holidays, and the daily 6:00pm reminder.</p>
+          <p className="lede">The countdown's go-live date and texts, the phases it covers, and the daily 6:00pm reminder.</p>
         </div>
       </header>
       <div className="settings-grid">
@@ -38,7 +38,6 @@ function SettingsForm({ onSaved, phases }: { onSaved: () => void; phases: string
   const [date, setDate] = useState('');
   const [time, setTime] = useState('10:00');
   const [recipients, setRecipients] = useState('');
-  const [newHoliday, setNewHoliday] = useState('');
   const [status, setStatus] = useState<Status>(null);
   const [busy, setBusy] = useState(false);
 
@@ -57,12 +56,6 @@ function SettingsForm({ onSaved, phases }: { onSaved: () => void; phases: string
 
   const set = <K extends keyof AdminSettings>(key: K, value: AdminSettings[K]) =>
     setSettings({ ...settings, [key]: value });
-
-  function addHoliday() {
-    if (!newHoliday || settings!.holidays.includes(newHoliday)) return setNewHoliday('');
-    set('holidays', [...settings!.holidays, newHoliday].sort());
-    setNewHoliday('');
-  }
 
   async function save(e: FormEvent) {
     e.preventDefault();
@@ -147,44 +140,6 @@ function SettingsForm({ onSaved, phases }: { onSaved: () => void; phases: string
               Phase {p}
             </label>
           ))}
-        </div>
-      </fieldset>
-
-      <fieldset>
-        <legend>Public holidays</legend>
-        {settings.holidays.length > 0 ? (
-          <ul className="chips">
-            {settings.holidays.map((h) => (
-              <li key={h}>
-                {new Date(`${h}T00:00:00Z`).toLocaleDateString('en-GB', {
-                  weekday: 'short',
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                  timeZone: 'UTC',
-                })}
-                <button
-                  type="button"
-                  className="chip-remove"
-                  aria-label={`Remove holiday ${h}`}
-                  onClick={() => set('holidays', settings.holidays.filter((x) => x !== h))}
-                >
-                  ×
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="hint">No holidays. Working days count Monday to Friday.</p>
-        )}
-        <div className="row">
-          <label>
-            Add a holiday
-            <input type="date" value={newHoliday} onChange={(e) => setNewHoliday(e.target.value)} />
-          </label>
-          <button type="button" className="btn" onClick={addHoliday} disabled={!newHoliday}>
-            Add
-          </button>
         </div>
       </fieldset>
 

@@ -193,7 +193,7 @@ export function CountdownPage() {
         <Dashboard data={data} c={c} />
         <footer className="v-foot">
           <span>
-            All times GMT (Accra). Working days exclude weekends{data.holidays.length > 0 && ' and public holidays'}.
+            All times GMT (Accra).
           </span>
           <span>CLET Digital Transformation Programme</span>
         </footer>
@@ -537,7 +537,7 @@ function CountdownHero({ c }: { c: Countdown | null }) {
       </div>
       {!c.isLive && (
         <p className="hero-foot">
-          {c.weeksLeft.toFixed(1)} weeks · {c.workingDaysLeft} working {plural(c.workingDaysLeft, 'day')} left
+          {c.weeksLeft.toFixed(1)} weeks · {c.days} {plural(c.days, 'day')} left, weekends included
         </p>
       )}
     </section>
