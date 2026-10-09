@@ -509,7 +509,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(8px);
 }
-/* Days stand apart in gold; hours, minutes and seconds stay white */
+/* Each unit has its own colour: days gold, hours sky blue, minutes mint; seconds stay white */
 .hero-unit.days {
   background: linear-gradient(160deg, rgba(240, 199, 94, 0.26), rgba(191, 144, 0, 0.12));
   border-color: rgba(240, 199, 94, 0.55);
@@ -520,6 +520,26 @@
 }
 .hero-unit.days .hero-label {
   color: #f0d68a;
+}
+.hero-unit.hours {
+  background: linear-gradient(160deg, rgba(125, 170, 255, 0.24), rgba(58, 102, 184, 0.12));
+  border-color: rgba(125, 170, 255, 0.5);
+}
+.hero-unit.hours .hero-num {
+  color: #9cc0ff;
+}
+.hero-unit.hours .hero-label {
+  color: #bcd3ff;
+}
+.hero-unit.minutes {
+  background: linear-gradient(160deg, rgba(94, 224, 170, 0.22), rgba(46, 154, 90, 0.1));
+  border-color: rgba(94, 224, 170, 0.45);
+}
+.hero-unit.minutes .hero-num {
+  color: #7ee8bd;
+}
+.hero-unit.minutes .hero-label {
+  color: #aef0d3;
 }
 .hero-num {
   font-size: clamp(2.6rem, 9vw, 11rem);
