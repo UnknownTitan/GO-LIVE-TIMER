@@ -56,8 +56,9 @@ leave the recipients empty) so the team does not get duplicate emails.
 PostgreSQL database, both in Frankfurt.
 
 1. In Render, choose **New > Blueprint** and pick this GitHub repository.
-2. Fill in `ADMIN_EMAIL` and `ADMIN_PASSWORD` (12+ characters). That admin is created on first
-   start; it is never overwritten later. Leave the SMTP values empty to log reminders instead of
+2. Fill in `ADMIN_EMAIL` and `ADMIN_PASSWORD` (12+ characters). On every start that admin is
+   created if missing, or its password reset to match `ADMIN_PASSWORD`; change the value in
+   Render to change the password. Leave the SMTP values empty to log reminders instead of
    sending them.
 3. Apply. Migrations run on start-up, including `007_release1_snapshot.sql`, so the new database
    starts with the Release 1 go-live decisions and readiness statuses.

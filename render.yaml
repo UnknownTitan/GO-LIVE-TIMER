@@ -18,7 +18,7 @@ services:
         fromDatabase:
           name: clet-go-live-db
           property: connectionString
-      # First admin account, created on start-up if it does not exist yet (password: 12+ characters).
+      # Admin account: created on start-up if missing, password kept in step with ADMIN_PASSWORD (12+ characters).
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD
