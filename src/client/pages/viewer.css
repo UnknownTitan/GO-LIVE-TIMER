@@ -509,27 +509,27 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(8px);
 }
-/* Each unit has its own colour: days gold, hours sky blue, minutes mint; seconds stay white */
+/* Each unit has its own colour: days red, hours yellow, minutes mint; seconds stay white */
 .hero-unit.days {
-  background: linear-gradient(160deg, rgba(240, 199, 94, 0.26), rgba(191, 144, 0, 0.12));
-  border-color: rgba(240, 199, 94, 0.55);
-  box-shadow: 0 0 0 1px rgba(240, 199, 94, 0.15), 0 18px 40px -20px rgba(191, 144, 0, 0.6);
+  background: linear-gradient(160deg, rgba(255, 107, 92, 0.26), rgba(196, 60, 60, 0.12));
+  border-color: rgba(255, 122, 107, 0.55);
+  box-shadow: 0 0 0 1px rgba(255, 122, 107, 0.15), 0 18px 40px -20px rgba(196, 60, 60, 0.6);
 }
 .hero-unit.days .hero-num {
-  color: #f5cf63;
+  color: #ff7a6b;
 }
 .hero-unit.days .hero-label {
-  color: #f0d68a;
+  color: #ffaaa0;
 }
 .hero-unit.hours {
-  background: linear-gradient(160deg, rgba(125, 170, 255, 0.24), rgba(58, 102, 184, 0.12));
-  border-color: rgba(125, 170, 255, 0.5);
+  background: linear-gradient(160deg, rgba(255, 216, 77, 0.24), rgba(217, 154, 26, 0.12));
+  border-color: rgba(255, 216, 77, 0.5);
 }
 .hero-unit.hours .hero-num {
-  color: #9cc0ff;
+  color: #ffd84d;
 }
 .hero-unit.hours .hero-label {
-  color: #bcd3ff;
+  color: #ffe79a;
 }
 .hero-unit.minutes {
   background: linear-gradient(160deg, rgba(94, 224, 170, 0.22), rgba(46, 154, 90, 0.1));
