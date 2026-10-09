@@ -529,7 +529,7 @@ function CountdownHero({ c }: { c: Countdown | null }) {
       </p>
       <div className="hero-units" aria-live="off">
         {units.map((u, i) => (
-          <span key={i} className="hero-unit">
+          <span key={i} className={i === 0 ? 'hero-unit days' : 'hero-unit'}>
             <span className="hero-num">{u.n}</span>
             <span className="hero-label">{u.label}</span>
           </span>
