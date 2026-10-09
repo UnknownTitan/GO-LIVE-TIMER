@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
+import { ThemeToggle } from '../theme';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -52,6 +53,9 @@ export default function LoginPage() {
           {busy ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
+      <div className="login-theme">
+        <ThemeToggle />
+      </div>
     </main>
   );
 }

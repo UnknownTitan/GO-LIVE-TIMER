@@ -17,8 +17,9 @@
   color-scheme: light;
 }
 
+/* Dark: chosen explicitly, or following the device when the theme is 'system'. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --navy: #9fb6e0;
     --gold: #d9a92a;
     --gold-text: #e0b545;
@@ -36,6 +37,24 @@
     --notice-bg: #3a2f10;
     color-scheme: dark;
   }
+}
+:root[data-theme='dark'] {
+  --navy: #9fb6e0;
+  --gold: #d9a92a;
+  --gold-text: #e0b545;
+  --bg: #0d1626;
+  --surface: #15213a;
+  --text: #e9edf5;
+  --text-body: #dfe4ee;
+  --muted: #a9b3c6;
+  --line: #2c3a57;
+  --track: #24324f;
+  --fill: #d9a92a;
+  --error: #ff8a7d;
+  --success: #7fd69b;
+  --focus: #e0b545;
+  --notice-bg: #3a2f10;
+  color-scheme: dark;
 }
 
 *,
@@ -152,12 +171,18 @@ h2 {
   border-color: #1f3864;
   color: #fff;
 }
+/* Dark: chosen explicitly, or following the device when the theme is 'system'. */
 @media (prefers-color-scheme: dark) {
-  .btn.primary {
+  :root:not([data-theme='light']) .btn.primary {
     background: var(--gold);
     border-color: var(--gold);
     color: #0d1626;
   }
+}
+:root[data-theme='dark'] .btn.primary {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #0d1626;
 }
 .btn.ghost {
   border-color: var(--line);
@@ -340,4 +365,45 @@ body:fullscreen {
 .card > .success,
 .card > .error {
   margin-bottom: 12px;
+}
+
+/* Light / Dark / System switch */
+.theme-toggle {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.theme-toggle button {
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.theme-toggle button:hover {
+  color: var(--text);
+}
+.theme-toggle button[aria-pressed='true'] {
+  background: var(--navy);
+  color: var(--bg);
+}
+@media (max-width: 700px) {
+  .theme-label {
+    display: none;
+  }
+}
+.login-theme {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
 }

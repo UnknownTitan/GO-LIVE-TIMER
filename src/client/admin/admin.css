@@ -28,8 +28,9 @@
   --dot-no: #8a93a6;
 }
 
+/* Dark: chosen explicitly, or following the device when the theme is 'system'. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --side-bg: #0a1220;
     --side-hover: #16233b;
     --side-active: #1f3359;
@@ -50,6 +51,27 @@
     --dot-ready: #7f9fe0;
     --dot-live: #4cc47e;
   }
+}
+:root[data-theme='dark'] {
+  --side-bg: #0a1220;
+  --side-hover: #16233b;
+  --side-active: #1f3359;
+  --row-hover: #1a2844;
+  --row-selected: #2e2a14;
+
+  --st-not_ready-bg: #3d1714;
+  --st-not_ready-fg: #ffb4ab;
+  --st-in_progress-bg: #3a2c0c;
+  --st-in_progress-fg: #f5c76b;
+  --st-ready-bg: #1c2b4d;
+  --st-ready-fg: #b8c9f0;
+  --st-live-bg: #12321f;
+  --st-live-fg: #8fdcab;
+  --st-no-bg: #232c3d;
+  --st-no-fg: #a9b3c6;
+
+  --dot-ready: #7f9fe0;
+  --dot-live: #4cc47e;
 }
 
 /* ---------- Shell ---------- */

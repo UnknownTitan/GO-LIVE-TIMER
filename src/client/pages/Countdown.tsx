@@ -3,6 +3,7 @@ import { computeCountdown, formatGoLive, formatShortDate, plural, type Countdown
 import { STATUS_LABELS, type SystemStatus } from '../../shared/status';
 import type { CountdownData, PublicSystem } from '../../shared/validation';
 import { api } from '../api';
+import { ThemeToggle } from '../theme';
 import {
   countStatuses,
   ProgressBar,
@@ -181,6 +182,7 @@ export function CountdownPage() {
           {data.readinessUpdatedAt && (
             <span className="v-updated">Readiness updated {formatShortDate(data.readinessUpdatedAt)}</span>
           )}
+          <ThemeToggle className="v-theme" />
           <FullscreenButton />
         </div>
         {stale && (

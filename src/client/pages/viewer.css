@@ -44,8 +44,9 @@
   background-attachment: fixed;
 }
 
+/* Dark: chosen explicitly, or following the device when the theme is 'system'. */
 @media (prefers-color-scheme: dark) {
-  .viewer {
+  :root:not([data-theme='light']) .viewer {
     --v-bg: #060a14;
     --v-glow-1: rgba(80, 112, 210, 0.22);
     --v-glow-2: rgba(191, 144, 0, 0.1);
@@ -75,6 +76,36 @@
     --s-not_ready-bg: rgba(196, 60, 60, 0.2);
     --s-not_ready-fg: #ffb4ab;
   }
+}
+:root[data-theme='dark'] .viewer {
+  --v-bg: #060a14;
+  --v-glow-1: rgba(80, 112, 210, 0.22);
+  --v-glow-2: rgba(191, 144, 0, 0.1);
+  --v-card: rgba(18, 26, 46, 0.66);
+  --v-card-solid: #121a2e;
+  --v-border: rgba(255, 255, 255, 0.08);
+  --v-border-strong: rgba(255, 255, 255, 0.16);
+  --v-text: #eef2fa;
+  --v-body: #d5dbe8;
+  --v-muted: #98a2b8;
+  --v-track: rgba(255, 255, 255, 0.08);
+  --v-hover: rgba(255, 255, 255, 0.04);
+  --v-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 16px 40px -20px rgba(0, 0, 0, 0.6);
+  --v-accent: #9fb6e0;
+  --v-gold: #e0b545;
+
+  --s-live: #2f9e5d;
+  --s-ready: #6584cf;
+  --s-in_progress: #bf870f;
+  --s-not_ready: #c43c3c;
+  --s-live-bg: rgba(47, 158, 93, 0.18);
+  --s-live-fg: #8fdcab;
+  --s-ready-bg: rgba(101, 132, 207, 0.2);
+  --s-ready-fg: #c3d2f5;
+  --s-in_progress-bg: rgba(191, 135, 15, 0.2);
+  --s-in_progress-fg: #f5c76b;
+  --s-not_ready-bg: rgba(196, 60, 60, 0.2);
+  --s-not_ready-fg: #ffb4ab;
 }
 
 .viewer :focus-visible {
@@ -1101,4 +1132,27 @@ tr.detail td {
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* Theme switch inside the viewer uses the viewer's glass tokens */
+.viewer .theme-toggle {
+  border-color: var(--v-border-strong);
+  background: var(--v-card);
+  backdrop-filter: blur(12px);
+}
+.viewer .theme-toggle button {
+  color: var(--v-muted);
+}
+.viewer .theme-toggle button:hover {
+  color: var(--v-text);
+}
+.viewer .theme-toggle button[aria-pressed='true'] {
+  background: var(--v-text);
+  color: var(--v-card-solid);
+}
+.v-topbar .v-theme {
+  margin-left: auto;
+}
+.v-topbar .v-theme + .v-btn {
+  margin-left: 0;
 }

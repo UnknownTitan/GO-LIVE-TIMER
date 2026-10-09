@@ -8,6 +8,13 @@
     <meta name="robots" content="noindex" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>CLET Go-Live Countdown</title>
+    <script>
+      // Apply a saved Light/Dark choice before first paint (see src/client/theme.tsx).
+      try {
+        var t = localStorage.getItem('golive:theme');
+        if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

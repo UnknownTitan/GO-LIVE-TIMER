@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import type { SystemItem } from '../../shared/validation';
 import { api, ApiError } from '../api';
+import { ThemeToggle } from '../theme';
 import './admin.css';
 import { Icon, inScope, initials, type Admin, type AdminContext, type IconName, type SystemChange } from './shared';
 
@@ -175,6 +176,7 @@ export default function AdminLayout() {
             <span aria-current="page">{PAGE_TITLES[location.pathname] ?? 'Admin'}</span>
           </nav>
           <div className="user">
+            <ThemeToggle />
             <span className="avatar" aria-hidden="true">
               {initials(me.name)}
             </span>
