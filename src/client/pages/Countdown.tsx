@@ -259,17 +259,7 @@ export function Dashboard({ data, c }: { data: CountdownData; c: Countdown | nul
           {data.programmeLine && <p className="programme">{data.programmeLine}</p>}
           <h1>{data.headline}</h1>
           <p className="lede">Readiness of every system in this go-live, by status, phase and cluster.</p>
-          {data.goLiveAt && (
-            <p className="v-date">
-              <span className="v-date-icon" aria-hidden="true">
-                <VIcon name="calendar" />
-              </span>
-              <span>
-                <span className="label">{c?.isLive ? 'Went live' : 'Go-live date'}</span>
-                <strong>{formatGoLive(data.goLiveAt)}</strong>
-              </span>
-            </p>
-          )}
+          {data.goLiveAt && <GoLiveDate iso={data.goLiveAt} isLive={Boolean(c?.isLive)} />}
         </div>
         <CountdownHero c={c} />
       </header>
@@ -490,6 +480,29 @@ export function TileDetail({
       )}
       </div>
     </dialog>
+  );
+}
+
+const utcPart = (iso: string, options: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat('en-GB', { ...options, timeZone: 'UTC' }).format(new Date(iso));
+
+/** The go-live date shown large: weekday, day month year, and time in GMT. */
+function GoLiveDate({ iso, isLive }: { iso: string; isLive: boolean }) {
+  return (
+    <div className="v-date" aria-label={`${isLive ? 'Went live' : 'Go-live date'}: ${formatGoLive(iso)}`}>
+      <span className="v-date-icon" aria-hidden="true">
+        <VIcon name="calendar" size={26} />
+      </span>
+      <span className="v-date-text" aria-hidden="true">
+        <span className="label">
+          {isLive ? 'Went live' : 'Go-live date'} · {utcPart(iso, { weekday: 'long' })}
+        </span>
+        <span className="v-date-main">
+          <strong>{utcPart(iso, { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+          <span className="v-date-time">{utcPart(iso, { hour: '2-digit', minute: '2-digit', hour12: false })} GMT</span>
+        </span>
+      </span>
+    </div>
   );
 }
 

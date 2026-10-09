@@ -39,6 +39,9 @@ describe('viewer dashboard', () => {
   it('renders the countdown, tiles, charts, table and lists', () => {
     const html = render('2026-10-08T20:00:00Z');
     expect(html).toContain('Go-live countdown');
+    expect(html).toContain('15 October 2026');
+    expect(html).toContain('10:00 GMT');
+    expect(html).toContain('Thursday');
     expect(html).toContain('This go-live');
     expect(html).not.toContain('Readiness by phase');
     expect(html).not.toContain('Systems by status');

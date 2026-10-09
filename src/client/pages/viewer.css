@@ -377,12 +377,12 @@
   font-size: 1rem;
 }
 .v-date {
-  margin: 18px 0 0;
+  margin: 20px 0 0;
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 16px 10px 10px;
-  border-radius: 16px;
+  gap: 16px;
+  padding: 14px 22px 14px 14px;
+  border-radius: 20px;
   border: 1px solid var(--v-border);
   background: var(--v-card);
   backdrop-filter: blur(16px);
@@ -391,23 +391,53 @@
 .v-date-icon {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--s-ready-bg);
-  color: var(--s-ready-fg);
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgba(224, 181, 69, 0.16);
+  color: var(--v-gold);
+  flex: none;
+}
+.v-date-text {
+  display: grid;
+  gap: 2px;
 }
 .v-date .label {
-  display: block;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--v-muted);
-  font-weight: 500;
 }
-.v-date strong {
-  display: block;
+.v-date-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+}
+.v-date-main strong {
+  font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
   color: var(--v-text);
+  font-variant-numeric: tabular-nums;
+}
+.v-date-time {
+  font-size: clamp(1.1rem, 2vw, 1.4rem);
   font-weight: 650;
-  letter-spacing: -0.01em;
+  color: var(--v-gold);
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 520px) {
+  .v-date {
+    display: flex;
+    padding: 12px 14px;
+  }
+  .v-date-icon {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 /* Countdown hero */
